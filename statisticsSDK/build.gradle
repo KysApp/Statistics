@@ -1,0 +1,153 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+version = "0.0.1" //这个是版本号，必须填写
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion '26.0.2'
+
+    resourcePrefix "kysyfstatistics_"  //这个可以随便填
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    compile 'com.android.support:appcompat-v7:23.1.0'
+//    testCompile 'junit:junit:4.12'
+//    androidTestCompile 'com.android.support.test:runner:1.0.1'
+//    androidTestCompile 'com.android.support.test.espresso:espresso-core:3.0.1'
+
+    compile 'io.reactivex.rxjava2:rxjava:2.1.9'
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+
+    compile 'com.squareup.okhttp3:okhttp:3.10.0'
+
+    compile files('libs/protobuf-java-3.4.0.jar')
+}
+
+def siteUrl = 'https://github.com/KysApp/Statistics' // 项目的主页 这个是说明，可随便填
+def gitUrl = 'https://github.com/KysApp/Statistics.git' // Git仓库的url 这个是说明，可随便填
+group = "com.kys.statistics" // 这里是groupId ,必须填写 一般填你唯一的包名
+
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            project {
+                packaging 'aar'
+                // Add your description here
+                name 'statistics for app' //项目描述
+                url siteUrl
+                // Set your license
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'kysyf' //填写开发者的一些基本信息
+                        name 'kysyf' //填写开发者的一些基本信息
+                        email 'kysyf@qq.com' //填写开发者的一些基本信息
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+                }
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+task javadoc(type: Javadoc) {
+    failOnError false
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+javadoc {
+    options {
+        encoding "UTF-8"
+        charSet 'UTF-8'
+        author true
+        version true
+        links "http://docs.oracle.com/javase/8/docs/api"
+    }
+}
+
+//android.libraryVariants.all { variant ->
+//    println variant.javaCompiler.classpath.files
+//    if (variant.name == 'release') { //我们只需 release 的 javadoc
+//        task("generate${variant.name.capitalize()}Javadoc", type: Javadoc) {
+//            // title = ''
+//            // description = ''
+//            source = variant.javaCompiler.source
+//            classpath = files(variant.javaCompiler.classpath.files, project.android.getBootClasspath())
+//            options {
+//                encoding "utf-8"
+//                links "http://docs.oracle.com/javase/8/docs/api/"
+//                linksOffline "http://d.android.com/reference", "${android.sdkDirectory}/docs/reference"
+//            }
+//            exclude '**/BuildConfig.java'
+//            exclude '**/R.java'
+//        }
+//        task("javadoc${variant.name.capitalize()}Jar", type: Jar, dependsOn: "generate${variant.name.capitalize()}Javadoc") {
+//            classifier = 'javadoc'
+//            from tasks.getByName("generate${variant.name.capitalize()}Javadoc").destinationDir
+//        }
+//        artifacts {
+//            archives tasks.getByName("javadoc${variant.name.capitalize()}Jar")
+//        }
+//    }
+//}
+
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+bintray {
+    user = properties.getProperty("bintray.user") //读取 local.properties 文件里面的 bintray.user
+    key = properties.getProperty("bintray.apikey") //读取 local.properties 文件里面的 bintray.apikey
+    configurations = ['archives']
+    pkg {
+        repo = "maven" //maven仓库的名字
+        name = "statistics" //发布到JCenter上的项目名字，必须填写
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ["Apache-2.0"]
+        publish = true
+    }
+}
